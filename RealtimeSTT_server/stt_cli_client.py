@@ -64,10 +64,10 @@ def main():
                         help="Continuously transcribe speech without exiting")
     parser.add_argument("-L", "--list", action="store_true",
                         help="List available audio input devices and exit")
-    parser.add_argument("--control", "--control_url", default=DEFAULT_CONTROL_URL,
-                        help="STT Control WebSocket URL")
-    parser.add_argument("--data", "--data_url", default=DEFAULT_DATA_URL,
-                        help="STT Data WebSocket URL")
+    parser.add_argument("--control", "--control_url", default=None,
+                        help="STT Control WebSocket URL. If not specified, constructed from host and control port.")
+    parser.add_argument("--data", "--data_url", default=None,
+                        help="STT Data WebSocket URL. If not specified, constructed from host and data port.")
     parser.add_argument("--post-silence", type=float, default=1.0,
                       help="Post speech silence duration in seconds (default: 1.0)")
     parser.add_argument("--unknown-pause", type=float, default=1.3,
@@ -84,6 +84,8 @@ def main():
                       help="Minimum text similarity for hard break (default: 0.99)")
     parser.add_argument("--min-chars", type=int, default=15,
                       help="Minimum characters for hard break (default: 15)")
+    parser.add_argument("--host", default="localhost",
+                        help="Host address of the STT server. Default is localhost.")
 
     args = parser.parse_args()
 
@@ -102,6 +104,14 @@ def main():
     hard_break_even_on_background_noise_min_texts = args.min_texts
     hard_break_even_on_background_noise_min_similarity = args.min_similarity
     hard_break_even_on_background_noise_min_chars = args.min_chars
+
+    # Construct WebSocket URLs if not explicitly provided
+    control_url = args.control
+    data_url = args.data
+    if control_url is None:
+        control_url = f"ws://{args.host}:8011"
+    if data_url is None:
+        data_url = f"ws://{args.host}:8012"
 
     # Check if output is being redirected
     if not os.isatty(sys.stdout.fileno()):
@@ -209,8 +219,8 @@ def main():
 
     client = AudioToTextRecorderClient(
         language=args.language,
-        control_url=args.control,
-        data_url=args.data,
+        control_url=control_url,
+        data_url=data_url,
         debug_mode=args.debug,
         on_realtime_transcription_update=on_realtime_transcription_update,
         use_microphone=True,

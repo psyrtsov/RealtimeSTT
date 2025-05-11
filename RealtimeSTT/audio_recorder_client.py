@@ -513,10 +513,11 @@ class AudioToTextRecorderClient:
         if self.use_extended_logging:
             args.append('--use_extended_logging')  # flag, no need for True/False
 
+        # Add host parameter if available
         if self.control_url:
             parsed_control_url = urlparse(self.control_url)
-            if parsed_control_url.port:
-                args += ['--control_port', str(parsed_control_url.port)]
+            if parsed_control_url.hostname:
+                args += ['--host', parsed_control_url.hostname]
         if self.data_url:
             parsed_data_url = urlparse(self.data_url)
             if parsed_data_url.port:
